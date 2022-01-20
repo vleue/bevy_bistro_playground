@@ -2,6 +2,8 @@
 
 Bevy playground with the Bistro scene from https://developer.nvidia.com/orca/amazon-lumberyard-bistro
 
+![](bevy_bistro_playground.png)
+
 ## How to use
 
 Download the scenes, and reexport `BistroExterior.fbx` and `BistroInterior_Wine.fbx` as GLTF files (in `.glb` format). Move the glb files to the assets folder.

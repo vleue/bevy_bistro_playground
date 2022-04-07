@@ -75,6 +75,8 @@ struct Lantern;
 struct StreetLight;
 #[derive(Component)]
 struct Ceiling;
+#[derive(Component)]
+struct Wall;
 
 struct LightSettings {
     ceiling: f32,
@@ -141,6 +143,40 @@ fn scene_update(
                             }
                         }
                     }
+                    if name.starts_with("Bistro_Research_Interior_Paris_Wall_Light_Interior") {
+                        // One of the interior wall light:
+                        // - Spawn a point light
+                        // - Make the mesh not casting shadows
+                        let child = children[0];
+                        commands.entity(child).insert(NotShadowCaster);
+                        // For those lights, they are not transformed to their place, but the mesh is moved.
+                        // We find the center of the mesh, which is where the light should be.
+                        if let Ok(mesh_handle) = has_mesh.get(child) {
+                            if let Some(mesh) = meshes.get(mesh_handle) {
+                                if let Some(VertexAttributeValues::Float32x3(attr)) =
+                                    mesh.attribute(Mesh::ATTRIBUTE_POSITION)
+                                {
+                                    let sum =
+                                        attr.iter().fold(Vec3::ZERO, |acc, v| acc + Vec3::from(*v));
+                                    let center = sum / attr.iter().count() as f32 * 0.016;
+                                    commands
+                                        .spawn_bundle(PointLightBundle {
+                                            transform: Transform::from_translation(center)
+                                                .with_scale(Vec3::splat(0.16)),
+                                            point_light: PointLight {
+                                                color: Color::rgb(1.0, 0.9, 0.4),
+                                                intensity: LIGHT_SETTINGS.ceiling,
+                                                range: LIGHT_SETTINGS.ceiling
+                                                    / LIGHT_SETTINGS.range_ratio,
+                                                ..Default::default()
+                                            },
+                                            ..Default::default()
+                                        })
+                                        .insert(Wall);
+                                }
+                            }
+                        }
+                    } // This are exterior elements from the interior scene, remove them
                     if name.contains("Exterior") {
                         commands.entity(entity).despawn_recursive();
                     }
@@ -290,6 +326,7 @@ fn input(
     mut lights: Query<(
         &mut PointLight,
         Option<&Ceiling>,
+        Option<&Wall>,
         Option<&Lantern>,
         Option<&StreetLight>,
     )>,
@@ -302,7 +339,8 @@ fn input(
         }
     }
     if input.just_pressed(KeyCode::C) {
-        for (mut light, _, ceiling, _, _) in lights.iter_mut() {
+        info!("toggling Ceiling");
+        for (mut light, ceiling, _, _, _) in lights.iter_mut() {
             if ceiling.is_some() {
                 if light.intensity == 0.0 {
                     light.intensity = LIGHT_SETTINGS.ceiling;
@@ -310,10 +348,26 @@ fn input(
                     light.intensity = 0.0;
                 }
                 light.range = light.intensity / LIGHT_SETTINGS.range_ratio;
+                light.shadows_enabled = *shadow_enabled;
+            }
+        }
+    }
+    if input.just_pressed(KeyCode::W) {
+        info!("toggling Wall");
+        for (mut light, _, wall, _, _) in lights.iter_mut() {
+            if wall.is_some() {
+                if light.intensity == 0.0 {
+                    light.intensity = LIGHT_SETTINGS.ceiling;
+                } else {
+                    light.intensity = 0.0;
+                }
+                light.range = light.intensity / LIGHT_SETTINGS.range_ratio;
+                light.shadows_enabled = *shadow_enabled;
             }
         }
     }
     if input.just_pressed(KeyCode::L) {
+        info!("toggling Lantern");
         for (mut light, _, _, lantern, _) in lights.iter_mut() {
             if lantern.is_some() {
                 if light.intensity == 0.0 {
@@ -322,10 +376,12 @@ fn input(
                     light.intensity = 0.0;
                 }
                 light.range = light.intensity / LIGHT_SETTINGS.range_ratio;
+                light.shadows_enabled = *shadow_enabled;
             }
         }
     }
     if input.just_pressed(KeyCode::S) {
+        info!("toggling Streetlight");
         for (mut light, _, _, _, street) in lights.iter_mut() {
             if street.is_some() {
                 if light.intensity == 0.0 {
@@ -334,25 +390,31 @@ fn input(
                     light.intensity = 0.0;
                 }
                 light.range = light.intensity / LIGHT_SETTINGS.range_ratio;
+                light.shadows_enabled = *shadow_enabled;
             }
         }
     }
     if input.just_pressed(KeyCode::I) {
         let count = lights.iter().count();
         info!("There are {count} lights");
-        for (light, _, ceiling, lantern, street) in lights.iter() {
-            match (ceiling, lantern, street) {
-                (Some(_), None, None) => info!(
+        for (light, ceiling, wall, lantern, street) in lights.iter() {
+            match (ceiling, wall, lantern, street) {
+                (Some(_), None, None, None) => info!(
                     "Ceiling light | status: {} - shadows: {}",
                     light.intensity != 0.0,
                     light.shadows_enabled
                 ),
-                (None, Some(_), None) => info!(
+                (None, Some(_), None, None) => info!(
+                    "Wall light | status: {} - shadows: {}",
+                    light.intensity != 0.0,
+                    light.shadows_enabled
+                ),
+                (None, None, Some(_), None) => info!(
                     "Lantern | status: {} - shadows: {}",
                     light.intensity != 0.0,
                     light.shadows_enabled
                 ),
-                (None, None, Some(_)) => info!(
+                (None, None, None, Some(_)) => info!(
                     "Street light | status: {} - shadows: {}",
                     light.intensity != 0.0,
                     light.shadows_enabled

@@ -141,11 +141,12 @@ fn scene_update(
                             }
                         }
                     }
-                    // This is the front door from the interior scene, remove it
-                    if *name
-                        == Name::new(
-                            "Bistro_Research_Exterior_Paris_Building_01_paris_buildi_3a60013",
-                        )
+                    if name.contains("Exterior") {
+                        commands.entity(entity).despawn_recursive();
+                    }
+                    if name.ends_with("WineGlass")
+                        || name.ends_with("WineGlass2.008")
+                        || name.ends_with("WineGlass4.008")
                     {
                         commands.entity(entity).despawn_recursive();
                     }

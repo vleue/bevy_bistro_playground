@@ -188,6 +188,9 @@ fn scene_update(
                     }
                 }
             });
+            for (_, mut material) in materials.iter_mut() {
+                material.flip_normal_map_y = true;
+            }
             scene_instance.interior = None;
         }
     }
@@ -304,6 +307,9 @@ fn scene_update(
                     material.base_color.set_a(0.2);
                     material.alpha_mode = AlphaMode::Blend;
                 }
+            }
+            for (_, mut material) in materials.iter_mut() {
+                material.flip_normal_map_y = true;
             }
             scene_instance.exterior = None;
         }

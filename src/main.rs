@@ -240,6 +240,10 @@ fn scene_update(
                             }
                         }
                     }
+                    if name.starts_with("Bistro_Research_Exterior_Paris_StreetLight") {
+                        let child = children[0];
+                        commands.entity(child).insert(NotShadowCaster);
+                    }
                     if name.starts_with("Bistro_Research_Exterior_Paris_Streetlight_Glass")
                         || name.starts_with("Bistro_Research_Exterior_Paris_StreetLight_Glass")
                     {

@@ -240,7 +240,9 @@ fn scene_update(
                             }
                         }
                     }
-                    if name.starts_with("Bistro_Research_Exterior_Paris_Streetlight_Glass") {
+                    if name.starts_with("Bistro_Research_Exterior_Paris_Streetlight_Glass")
+                        || name.starts_with("Bistro_Research_Exterior_Paris_StreetLight_Glass")
+                    {
                         // One of the streetlights:
                         // - Spawn a point light
                         // - Make the mesh not casting shadows

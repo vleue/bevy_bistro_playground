@@ -26,7 +26,7 @@ fn main() {
 fn info() {
     info!("Welcome to Bevy demo with the Bistro Scene");
     info!("Controls:");
-    info!("  spacebar - enable shadows on the 10 lights closer to the camera");
+    info!("  spacebar - enable shadows");
     info!("  c - enable / disable the ceiling lights");
     info!("  l - enable / disable the lanterns");
     info!("  s - enable / disable the streetlights");
@@ -288,40 +288,16 @@ fn input(
     input: Res<Input<KeyCode>>,
     mut lights: Query<(
         &mut PointLight,
-        &GlobalTransform,
         Option<&Ceiling>,
         Option<&Lantern>,
         Option<&StreetLight>,
     )>,
-    camera: Query<&GlobalTransform, (Without<PointLight>, With<Camera>)>,
+    mut shadow_enabled: Local<bool>,
 ) {
     if input.just_pressed(KeyCode::Space) {
-        let camera_transform = camera.single();
-        let mut at_least_one_on = false;
-        for (mut light, _, _, _, _) in lights.iter_mut() {
-            if light.shadows_enabled == true {
-                at_least_one_on = true;
-            }
-            light.shadows_enabled = false;
-        }
-        if !at_least_one_on {
-            let mut lights_and_distance: Vec<_> = lights
-                .iter_mut()
-                .map(|(l, t, _, _, _)| {
-                    (
-                        l,
-                        t.translation.distance_squared(camera_transform.translation),
-                    )
-                })
-                .collect();
-            lights_and_distance.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-            for (mut light, _) in lights_and_distance
-                .into_iter()
-                .filter(|(light, _)| light.intensity != 0.0)
-                .take(10)
-            {
-                light.shadows_enabled = true;
-            }
+        *shadow_enabled = !*shadow_enabled;
+        for (mut light, ..) in lights.iter_mut() {
+            light.shadows_enabled = *shadow_enabled;
         }
     }
     if input.just_pressed(KeyCode::C) {

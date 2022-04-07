@@ -9,7 +9,7 @@ use bevy::{
 fn main() {
     App::new()
         .insert_resource(PointLightShadowMap {
-            size: 2_usize.pow(13),
+            size: 2_usize.pow(11),
         })
         .insert_resource(DirectionalLightShadowMap {
             size: 2_usize.pow(13),

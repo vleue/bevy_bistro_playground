@@ -27,9 +27,10 @@ fn info() {
     info!("Welcome to Bevy demo with the Bistro Scene");
     info!("Controls:");
     info!("  spacebar - enable shadows");
-    info!("  c - enable / disable the ceiling lights");
-    info!("  l - enable / disable the lanterns");
-    info!("  s - enable / disable the streetlights");
+    info!("  1 - enable / disable the ceiling lights");
+    info!("  2 - enable / disable the wall lights");
+    info!("  3 - enable / disable the lanterns");
+    info!("  4 - enable / disable the streetlights");
     info!("  i - get informations on the lights");
 }
 
@@ -350,7 +351,7 @@ fn input(
             light.shadows_enabled = *shadow_enabled;
         }
     }
-    if input.just_pressed(KeyCode::C) {
+    if input.just_pressed(KeyCode::Key1) {
         info!("toggling Ceiling");
         for (mut light, ceiling, _, _, _) in lights.iter_mut() {
             if ceiling.is_some() {
@@ -364,7 +365,7 @@ fn input(
             }
         }
     }
-    if input.just_pressed(KeyCode::W) {
+    if input.just_pressed(KeyCode::Key2) {
         info!("toggling Wall");
         for (mut light, _, wall, _, _) in lights.iter_mut() {
             if wall.is_some() {
@@ -378,7 +379,7 @@ fn input(
             }
         }
     }
-    if input.just_pressed(KeyCode::L) {
+    if input.just_pressed(KeyCode::Key3) {
         info!("toggling Lantern");
         for (mut light, _, _, lantern, _) in lights.iter_mut() {
             if lantern.is_some() {
@@ -392,7 +393,7 @@ fn input(
             }
         }
     }
-    if input.just_pressed(KeyCode::S) {
+    if input.just_pressed(KeyCode::Key4) {
         info!("toggling Streetlight");
         for (mut light, _, _, _, street) in lights.iter_mut() {
             if street.is_some() {

@@ -45,7 +45,7 @@ fn setup(
     let interior = scene_spawner.spawn(asset_server.load("BistroInterior_Wine.glb#Scene0"));
 
     commands
-        .spawn_bundle(PerspectiveCameraBundle {
+        .spawn_bundle(Camera3dBundle {
             transform: Transform::from_xyz(-16., 6., 1.0)
                 .looking_at(Vec3::new(0.0, 1., 0.0), Vec3::Y),
             ..Default::default()

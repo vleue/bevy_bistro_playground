@@ -4,5 +4,8 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
-[dependencies]
-bevy = "0.8"
+[dependencies.bevy]
+version = "0.9.0-dev"
+git = "https://github.com/bevyengine/bevy"
+default-features = false
+features = [ "bevy_core_pipeline", "bevy_render", "bevy_pbr", "bevy_asset", "bevy_gltf", "bevy_winit", "bevy_scene", "png" ]

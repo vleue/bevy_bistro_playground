@@ -45,7 +45,7 @@ fn setup(
     let interior = scene_spawner.spawn(asset_server.load("BistroInterior_Wine.glb#Scene0"));
 
     commands
-        .spawn_bundle(Camera3dBundle {
+        .spawn(Camera3dBundle {
             transform: Transform::from_xyz(-16., 6., 1.0)
                 .looking_at(Vec3::new(0.0, 1., 0.0), Vec3::Y),
             ..Default::default()
@@ -58,7 +58,7 @@ fn setup(
     });
 
     commands
-        .spawn_bundle(DirectionalLightBundle {
+        .spawn(DirectionalLightBundle {
             directional_light: DirectionalLight {
                 shadows_enabled: true,
                 ..Default::default()
@@ -68,6 +68,7 @@ fn setup(
         .insert(Sun);
 }
 
+#[derive(Resource)]
 struct Scenes {
     interior: Option<InstanceId>,
     exterior: Option<InstanceId>,
@@ -112,8 +113,9 @@ fn scene_update(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     if let Some(instance_id) = scene_instance.interior {
-        if let Some(entity_iter) = scene_spawner.iter_instance_entities(instance_id) {
-            entity_iter.for_each(|entity| {
+        scene_spawner
+            .iter_instance_entities(instance_id)
+            .for_each(|entity| {
                 if let Ok((entity, name, children)) = named_entities.get(entity) {
                     if name.starts_with("Bistro_Research_Interior_Paris_Ceiling_Light") {
                         // One of the interior ceiling light:
@@ -132,7 +134,7 @@ fn scene_update(
                                         attr.iter().fold(Vec3::ZERO, |acc, v| acc + Vec3::from(*v));
                                     let center = sum / attr.iter().count() as f32 * 0.016;
                                     commands
-                                        .spawn_bundle(PointLightBundle {
+                                        .spawn(PointLightBundle {
                                             transform: Transform::from_translation(center)
                                                 .with_scale(Vec3::splat(0.16)),
                                             point_light: PointLight {
@@ -166,7 +168,7 @@ fn scene_update(
                                         attr.iter().fold(Vec3::ZERO, |acc, v| acc + Vec3::from(*v));
                                     let center = sum / attr.iter().count() as f32 * 0.016;
                                     commands
-                                        .spawn_bundle(PointLightBundle {
+                                        .spawn(PointLightBundle {
                                             transform: Transform::from_translation(center)
                                                 .with_scale(Vec3::splat(0.16)),
                                             point_light: PointLight {
@@ -194,9 +196,10 @@ fn scene_update(
                     }
                 }
             });
-            for (_, mut material) in materials.iter_mut() {
-                material.flip_normal_map_y = true;
-            }
+        for (_, mut material) in materials.iter_mut() {
+            material.flip_normal_map_y = true;
+        }
+        if scene_spawner.instance_is_ready(instance_id) {
             scene_instance.interior = None;
         }
     }
@@ -211,8 +214,9 @@ fn scene_update(
             ..Default::default()
         });
         let mut materials_to_fix = HashSet::default();
-        if let Some(entity_iter) = scene_spawner.iter_instance_entities(instance_id) {
-            entity_iter.for_each(|entity| {
+        scene_spawner
+            .iter_instance_entities(instance_id)
+            .for_each(|entity| {
                 if let Ok((entity, name, children)) = named_entities.get(entity) {
                     if name.starts_with("Lantern_Wind") {
                         // One of the lantern:
@@ -221,16 +225,18 @@ fn scene_update(
                         // - Make the material transparent
                         // - Spawn a "lightbulb"
                         commands.entity(entity).with_children(|lantern| {
-                            lantern
-                                .spawn_bundle(PbrBundle {
+                            lantern.spawn((
+                                PbrBundle {
                                     mesh: sphere.clone(),
                                     material: material.clone(),
                                     transform: Transform::from_xyz(0.0, -80.0, 0.0),
                                     ..Default::default()
-                                })
-                                .insert_bundle((NotShadowCaster, NotShadowReceiver));
+                                },
+                                NotShadowCaster,
+                                NotShadowReceiver,
+                            ));
                             lantern
-                                .spawn_bundle(PointLightBundle {
+                                .spawn(PointLightBundle {
                                     transform: Transform::from_xyz(0.0, -80.0, 0.0),
                                     point_light: PointLight {
                                         color: Color::rgb(1.0, 0.9, 0.5),
@@ -276,7 +282,7 @@ fn scene_update(
                                         attr.iter().fold(Vec3::ZERO, |acc, v| acc + Vec3::from(*v));
                                     let center = sum / attr.iter().count() as f32 * 0.016;
                                     commands
-                                        .spawn_bundle(PointLightBundle {
+                                        .spawn(PointLightBundle {
                                             transform: Transform::from_translation(center)
                                                 .with_scale(Vec3::splat(0.16)),
                                             point_light: PointLight {
@@ -307,16 +313,17 @@ fn scene_update(
                     }
                 }
             });
-            for material in materials_to_fix.drain() {
-                let material = materials.get_mut(material).unwrap();
-                if material.alpha_mode == AlphaMode::Opaque {
-                    material.base_color.set_a(0.2);
-                    material.alpha_mode = AlphaMode::Blend;
-                }
+        for material in materials_to_fix.drain() {
+            let material = materials.get_mut(material).unwrap();
+            if material.alpha_mode == AlphaMode::Opaque {
+                material.base_color.set_a(0.2);
+                material.alpha_mode = AlphaMode::Blend;
             }
-            for (_, mut material) in materials.iter_mut() {
-                material.flip_normal_map_y = true;
-            }
+        }
+        for (_, mut material) in materials.iter_mut() {
+            material.flip_normal_map_y = true;
+        }
+        if scene_spawner.instance_is_ready(instance_id) {
             scene_instance.exterior = None;
         }
     }
@@ -330,7 +337,7 @@ fn night_and_day(
     let (mut transform, mut light) = sun.single_mut();
     transform.rotation = Quat::from_euler(
         EulerRot::ZYX,
-        time.seconds_since_startup() as f32 * std::f32::consts::TAU / 20.0,
+        time.elapsed_seconds() * std::f32::consts::TAU / 20.0,
         0.0,
         -std::f32::consts::FRAC_PI_4,
     );

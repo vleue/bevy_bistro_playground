@@ -47,10 +47,15 @@ fn setup(
 
     commands.spawn((
         Camera3dBundle {
+            camera: Camera {
+                hdr: true,
+                ..default()
+            },
             transform: Transform::from_xyz(-16., 6., 1.0)
                 .looking_at(Vec3::new(0.0, 1., 0.0), Vec3::Y),
             ..Default::default()
         },
+        BloomSettings::default(),
         CameraController::default(),
     ));
 

@@ -1,4 +1,5 @@
 use bevy::{
+    core_pipeline::bloom::BloomSettings,
     input::mouse::MouseMotion,
     pbr::{DirectionalLightShadowMap, NotShadowCaster, NotShadowReceiver, PointLightShadowMap},
     prelude::*,
@@ -44,28 +45,30 @@ fn setup(
     let exterior = scene_spawner.spawn(asset_server.load("BistroExterior.glb#Scene0"));
     let interior = scene_spawner.spawn(asset_server.load("BistroInterior_Wine.glb#Scene0"));
 
-    commands
-        .spawn(Camera3dBundle {
+    commands.spawn((
+        Camera3dBundle {
             transform: Transform::from_xyz(-16., 6., 1.0)
                 .looking_at(Vec3::new(0.0, 1., 0.0), Vec3::Y),
             ..Default::default()
-        })
-        .insert(CameraController::default());
+        },
+        CameraController::default(),
+    ));
 
     commands.insert_resource(Scenes {
         interior: Some(interior),
         exterior: Some(exterior),
     });
 
-    commands
-        .spawn(DirectionalLightBundle {
+    commands.spawn((
+        DirectionalLightBundle {
             directional_light: DirectionalLight {
                 shadows_enabled: true,
                 ..Default::default()
             },
             ..Default::default()
-        })
-        .insert(Sun);
+        },
+        Sun,
+    ));
 }
 
 #[derive(Resource)]

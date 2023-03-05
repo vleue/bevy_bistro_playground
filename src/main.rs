@@ -16,6 +16,7 @@ fn main() {
         .insert_resource(DirectionalLightShadowMap {
             size: 2_usize.pow(13),
         })
+        .insert_resource(ClearColor(Color::MIDNIGHT_BLUE))
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
         .add_startup_system(info)
@@ -29,7 +30,8 @@ fn main() {
 fn info() {
     info!("Welcome to Bevy demo with the Bistro Scene");
     info!("Controls:");
-    info!("  spacebar - enable shadows");
+    info!("  spacebar - toggle shadows");
+    info!("  b - toggle bloom");
     info!("  1 - enable / disable the ceiling lights");
     info!("  2 - enable / disable the wall lights");
     info!("  3 - enable / disable the lanterns");
@@ -355,6 +357,7 @@ fn night_and_day(
 }
 
 fn input(
+    mut commands: Commands,
     input: Res<Input<KeyCode>>,
     mut lights: Query<(
         &mut PointLight,
@@ -364,13 +367,24 @@ fn input(
         Option<&StreetLight>,
     )>,
     mut shadow_enabled: Local<bool>,
-    camera: Query<&Transform, With<Camera>>,
+    mut bloom_enabled: Local<bool>,
+    camera: Query<(Entity, &Transform), With<Camera>>,
 ) {
     if input.just_pressed(KeyCode::Space) {
         *shadow_enabled = !*shadow_enabled;
         for (mut light, ..) in lights.iter_mut() {
             light.shadows_enabled = *shadow_enabled;
         }
+    }
+    if input.just_pressed(KeyCode::B) {
+        if !*bloom_enabled {
+            commands.entity(camera.single().0).remove::<BloomSettings>();
+        } else {
+            commands
+                .entity(camera.single().0)
+                .insert(BloomSettings::default());
+        }
+        *bloom_enabled = !*bloom_enabled;
     }
     if input.just_pressed(KeyCode::Key1) {
         info!("toggling Ceiling");
@@ -456,7 +470,7 @@ fn input(
                 _ => unreachable!(),
             }
         }
-        for transform in camera.iter() {
+        for (_, transform) in camera.iter() {
             info!("{:?}", transform);
         }
     }
